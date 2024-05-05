@@ -14,7 +14,7 @@
     <div id="app">
       <p>
         {{uid}} <br />
-        {{filename}} <br>
+        {{filename}} <br />
         {{miaoshu}}
       </p>
 
@@ -34,8 +34,8 @@
       ></div>
     </div>
   </body>
-  <script src="echarts.min.js"></script>
-  <script src="vue.global.js"></script>
+  <script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"></script>
+  <script src="https://cdn.staticfile.net/vue/3.3.4/vue.global.prod.min.js"></script>
   <script>
     const { createApp, ref } = Vue;
 
@@ -47,7 +47,7 @@
         const file = ref();
         const filename = ref("");
         const yizhao = ref("rank_type");
-        const miaoshu =ref('')
+        const miaoshu = ref("");
         const isShowFileInput = ref(true);
         function change() {
           filename.value = file.value.files[0].name;
@@ -148,9 +148,10 @@
             }, {});
             // console.log(tempdataa);
             //https://blog.csdn.net/wuj1935/article/details/115383494
-            let pingjunchoushu=tempa.SSR;
-            if (pingjunchoushu!==undefined){
-              miaoshu.value="SSR平均抽数:"+(tempdataa.length/pingjunchoushu).toString();
+            let pingjunchoushu = tempa.SSR;
+            if (pingjunchoushu !== undefined) {
+              miaoshu.value =
+                "SSR平均抽数:" + (tempdataa.length / pingjunchoushu).toString();
             }
             for (const key4 in tempa) {
               const element4 = tempa[key4];
