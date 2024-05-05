@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>分析未定抽卡记录</title>
+    <style>
+      .file {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <p>
+        {{uid}} <br />
+        {{filename}} <br>
+        {{miaoshu}}
+      </p>
+
+      <input
+        v-show="isShowFileInput"
+        ref="file"
+        type="file"
+        name="file"
+        id="file"
+        @change="change"
+      /><br />
+      <input v-show="isShowFileInput" type="text" v-model="yizhao" />
+
+      <div
+        ref="charts"
+        style="width: 100%; height: 100%; display: flex; flex-wrap: wrap"
+      ></div>
+    </div>
+  </body>
+  <script src="echarts.min.js"></script>
+  <script src="vue.global.js"></script>
+  <script>
+    const { createApp, ref } = Vue;
+
+    createApp({
+      setup() {
+        const charts = ref();
+        const uid = ref("选择抽卡统计文件");
+        // const message = ref("Hello vue!");
+        const file = ref();
+        const filename = ref("");
+        const yizhao = ref("rank_type");
+        const miaoshu =ref('')
+        const isShowFileInput = ref(true);
+        function change() {
+          filename.value = file.value.files[0].name;
+          const reader = new FileReader();
+          reader.onloadend = (e) => {
+            let res = e.target.result;
+            res = JSON.parse(res);
+            uid.value = "UID" + ":" + res.info.uid;
+            let gachas = Object();
+            for (const ke in res.list) {
+              const e = res.list[ke];
+              if (gachas[e.gacha_type] === undefined) {
+                gachas[e.gacha_type] = Object();
+              }
+              if (gachas[e.gacha_type][e[yizhao.value]] === undefined) {
+                gachas[e.gacha_type][e[yizhao.value]] = Array();
+              }
+              gachas[e.gacha_type][e[yizhao.value]].push(e);
+            }
+            for (const key in gachas) {
+              if (Object.hasOwnProperty.call(gachas, key)) {
+                const element = gachas[key];
+
+                let dataa = Array();
+
+                for (const key2 in element) {
+                  const element2 = element[key2];
+                  if (key2 == "SR") {
+                    dataa.push({
+                      value: element2.length,
+                      name: key2,
+                      itemStyle: { color: "#FAC858" },
+                    });
+                  } else if (key2 == "R") {
+                    dataa.push({
+                      value: element2.length,
+                      name: key2,
+                      itemStyle: { color: "#5470C6" },
+                    });
+                  } else if (key2 == "SSR") {
+                    dataa.push({
+                      value: element2.length,
+                      name: key2,
+                      itemStyle: { color: "#c23531" },
+                    });
+                  } else {
+                    dataa.push({ value: element2.length, name: key2 });
+                  }
+                }
+                console.log(dataa);
+
+                let chart = document.createElement("div");
+                chart.style = "width: 400px;height:250px;";
+                charts.value.appendChild(chart);
+                let myChart = echarts.init(chart);
+
+                let option = {
+                  tooltip: {
+                    //https://blog.csdn.net/GongWei_/article/details/107908847
+                    //提示框组件
+                    trigger: "item", //item数据项图形触发，主要在散点图，饼图等无类目轴的图表中使用。
+                    axisPointer: {
+                      // 坐标轴指示器，坐标轴触发有效
+                      type: "shadow", // 默认为直线，可选为：'line' | 'shadow'
+                    },
+                    formatter: "{c}抽 {d}%", //{a}（系列名称），{b}（数据项名称），{c}（数值）, {d}（百分比）
+                  }, //https://blog.csdn.net/GongWei_/article/details/107908847
+                  title: {
+                    text: "卡池" + key,
+                  },
+                  series: [
+                    {
+                      type: "pie",
+                      data: dataa,
+                      //   radius: 100
+                    },
+                  ],
+                };
+                myChart.setOption(option);
+              }
+            }
+
+            let dataa = Array();
+            let tempdataa = Array();
+            let tempa = Array();
+            for (const key3 in res.list) {
+              const element3 = res.list[key3];
+              tempdataa.push(element3[yizhao.value]);
+            }
+            //https://blog.csdn.net/wuj1935/article/details/115383494
+            tempa = tempdataa.reduce((pre, cur) => {
+              if (cur in pre) {
+                pre[cur]++;
+              } else {
+                pre[cur] = 1;
+              }
+              return pre;
+            }, {});
+            // console.log(tempdataa);
+            //https://blog.csdn.net/wuj1935/article/details/115383494
+            let pingjunchoushu=tempa.SSR;
+            if (pingjunchoushu!==undefined){
+              miaoshu.value="SSR平均抽数:"+(tempdataa.length/pingjunchoushu).toString();
+            }
+            for (const key4 in tempa) {
+              const element4 = tempa[key4];
+              dataa.push({ value: element4, name: key4 });
+            }
+            console.log(dataa);
+
+            let chart = document.createElement("div");
+            chart.style = "width: 400px;height:250px;";
+            charts.value.appendChild(chart);
+            let myChart = echarts.init(chart);
+
+            let option = {
+              tooltip: {
+                //https://blog.csdn.net/GongWei_/article/details/107908847
+                //提示框组件
+                trigger: "item", //item数据项图形触发，主要在散点图，饼图等无类目轴的图表中使用。
+                axisPointer: {
+                  // 坐标轴指示器，坐标轴触发有效
+                  type: "shadow", // 默认为直线，可选为：'line' | 'shadow'
+                },
+                formatter: "{c}抽 {d}%", //{a}（系列名称），{b}（数据项名称），{c}（数值）, {d}（百分比）
+              }, //https://blog.csdn.net/GongWei_/article/details/107908847
+              title: {
+                text: "总卡池",
+              },
+              series: [
+                {
+                  type: "pie",
+                  data: dataa,
+                  //   radius: 100
+                },
+              ],
+            };
+            myChart.setOption(option);
+
+            isShowFileInput.value = false;
+          };
+          reader.readAsText(file.value.files[0]);
+        }
+        return {
+          charts,
+          yizhao,
+          miaoshu,
+          filename,
+          change,
+          file,
+          isShowFileInput,
+          uid,
+        };
+      },
+    }).mount("#app");
+  </script>
+</html>
